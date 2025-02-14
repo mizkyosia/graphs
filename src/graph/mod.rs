@@ -1,13 +1,11 @@
-use std::{
-    collections::{HashMap, HashSet},
-    f32::{INFINITY, NEG_INFINITY},
-};
+use std::collections::{HashMap, HashSet};
 
 use eframe::egui::{Color32, Rect, pos2};
 use rand::Rng;
 use ulid::Ulid;
 
-use crate::vertex::Node;
+pub mod node;
+pub use node::*;
 
 pub const POINT_RADIUS: f32 = 8.0;
 
@@ -19,7 +17,10 @@ pub struct Graph {
 #[allow(dead_code)]
 impl Graph {
     pub fn new(vertices: HashMap<Ulid, Node>, edges: HashSet<(Ulid, Ulid)>) -> Self {
-        Graph { nodes: vertices, edges }
+        Graph {
+            nodes: vertices,
+            edges,
+        }
     }
 
     pub fn empty() -> Self {
@@ -27,6 +28,11 @@ impl Graph {
             nodes: HashMap::new(),
             edges: HashSet::new(),
         }
+    }
+
+    pub fn clear(&mut self) {
+        self.nodes.clear();
+        self.edges.clear();
     }
 
     pub fn size(&self) -> usize {
@@ -38,8 +44,8 @@ impl Graph {
             return Rect::ZERO;
         }
 
-        let mut min = pos2(INFINITY, INFINITY);
-        let mut max = pos2(NEG_INFINITY, NEG_INFINITY);
+        let mut min = pos2(f32::INFINITY, f32::INFINITY);
+        let mut max = pos2(f32::NEG_INFINITY, f32::NEG_INFINITY);
 
         for (_, v) in self.nodes.iter() {
             min = min.min(v.pos);

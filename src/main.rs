@@ -1,16 +1,13 @@
 use eframe::{NativeOptions, egui::Color32};
 use rand::{rng, seq::SliceRandom};
 
-use display::Display;
-use graph::Graph;
+use editor::GraphDisplayer;
+use graph::{Graph, Node};
 use ulid::Ulid;
-use vertex::Node;
 
-mod display;
-pub(crate) mod context_menu;
+mod editor;
 pub(crate) mod graph;
-pub(crate) mod tools;
-pub(crate) mod vertex;
+pub mod ui;
 
 fn main() {
     // unsafe { env::set_var("RUST_BACKTRACE", "full") };
@@ -32,7 +29,7 @@ fn main() {
         prev_id = cur_id;
     }
 
-    let mut vec: Vec<Ulid> = graph.nodes.keys().map(|k| *k).collect();
+    let mut vec: Vec<Ulid> = graph.nodes.keys().copied().collect();
     vec.shuffle(&mut rng());
 
     let _res = eframe::run_native(
@@ -42,10 +39,9 @@ fn main() {
             // This gives us image support:
             egui_extras::install_image_loaders(&cc.egui_ctx);
 
-            Ok(Box::<Display>::new({
-                let mut dis = Display::default();
-                dis.graphs = vec![graph];
-                dis
+            Ok(Box::<GraphDisplayer>::new(GraphDisplayer {
+                graphs: vec![graph],
+                ..Default::default()
             }))
         }),
     );
