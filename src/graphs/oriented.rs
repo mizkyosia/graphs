@@ -1,46 +1,49 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use eframe::egui::{Color32, Rect, pos2};
 use rand::Rng;
 use ulid::Ulid;
 
-pub mod node;
-pub use node::*;
+use super::{Graph, Node, POINT_RADIUS};
 
-pub const POINT_RADIUS: f32 = 8.0;
-
-pub struct Graph {
+pub struct OrientedGraph<W = f32>
+where
+    W: PartialOrd + PartialEq,
+{
     pub nodes: HashMap<Ulid, Node>,
-    pub edges: HashSet<(Ulid, Ulid)>,
+    pub edges: HashMap<(Ulid, Ulid), W>,
 }
 
-#[allow(dead_code)]
-impl Graph {
-    pub fn new(vertices: HashMap<Ulid, Node>, edges: HashSet<(Ulid, Ulid)>) -> Self {
-        Graph {
-            nodes: vertices,
-            edges,
-        }
+impl<W> Graph<(Ulid, Ulid), W> for OrientedGraph<W>
+where
+    W: PartialOrd + PartialEq,
+{
+    fn new(nodes: HashMap<Ulid, Node>, edges: HashMap<(Ulid, Ulid), W>) -> Self {
+        OrientedGraph { nodes, edges }
     }
 
-    pub fn empty() -> Self {
-        Graph {
+    fn empty() -> Self {
+        OrientedGraph {
             nodes: HashMap::new(),
-            edges: HashSet::new(),
+            edges: HashMap::new(),
         }
     }
 
-    pub fn clear(&mut self) {
+    fn clear(&mut self) {
         self.nodes.clear();
         self.edges.clear();
     }
 
-    pub fn size(&self) -> usize {
+    fn node_count(&self) -> usize {
         self.nodes.len()
     }
 
-    pub fn bounding_rect(&self) -> Rect {
-        if self.size() == 0 {
+    fn edge_count(&self) -> usize {
+        self.edges.len()
+    }
+
+    fn bounding_rect(&self) -> Rect {
+        if self.node_count() == 0 {
             return Rect::ZERO;
         }
 
@@ -58,38 +61,59 @@ impl Graph {
         Rect { min, max }
     }
 
-    pub fn insert(&mut self, vertex: Node) -> Ulid {
+    fn insert(&mut self, vertex: Node) -> Ulid {
         let id = Ulid::new();
         self.nodes.insert(id, vertex);
         id
     }
 
-    pub fn insert_with_edges(&mut self, vertex: Node, edges: Vec<(Ulid, Ulid)>) -> Ulid {
+    fn insert_with_edges(
+        &mut self,
+        vertex: Node,
+        edges: impl IntoIterator<Item = ((Ulid, Ulid), W)>,
+    ) -> Ulid {
         self.edges.extend(edges);
         self.insert(vertex)
     }
 
-    pub fn remove(&mut self, node: Ulid) {
-        self.edges.retain(|e| e.0 != node && e.1 != node);
-        self.nodes.remove(&node);
+    fn remove(&mut self, node: &Ulid) -> Option<Node> {
+        self.edges.retain(|e, _| e.0 != *node && e.1 != *node);
+        self.nodes.remove(&node)
     }
 
-    pub fn link(&mut self, v1: Ulid, v2: Ulid, double: bool) {
-        self.edges.insert((v1, v2));
-        if double {
-            self.edges.insert((v2, v1));
-        }
+    fn link(&mut self, v1: &Ulid, v2: &Ulid, weight: W) {
+        self.edges.insert((*v1, *v2), weight);
     }
 
-    pub fn get_neighbors(&self, vertex: Ulid) -> Vec<Ulid> {
+    fn linked(&self, node1: &Ulid, node2: &Ulid) -> bool {
+        self.edges.contains_key(&(*node1, *node2))
+    }
+
+    fn neighbors_out(&self, node: &Ulid) -> Vec<Ulid> {
         self.edges
             .iter()
-            .filter_map(|edge| if edge.0 == vertex { Some(edge.1) } else { None })
+            .filter_map(|(edge, _)| if edge.0 == *node { Some(edge.1) } else { None })
             .collect()
     }
 
+    fn neighbors_in(&self, node: &Ulid) -> Vec<Ulid> {
+        self.edges
+            .iter()
+            .filter_map(|(edge, _)| if edge.1 == *node { Some(edge.0) } else { None })
+            .collect()
+    }
+
+    fn djikstra(&self, start: &Ulid, end: &Ulid) -> Option<Vec<Ulid>> {
+        todo!()
+    }
+}
+
+impl<W> OrientedGraph<W>
+where
+    W: PartialOrd + PartialEq,
+{
     pub fn color(&mut self, order: Vec<Ulid>) -> u32 {
-        if order.len() != self.size() {
+        if order.len() != self.node_count() {
             panic!("Given order does not contain the whole graph")
         }
 
@@ -100,7 +124,7 @@ impl Graph {
 
         for i in order {
             let mut neighbor_colors: Vec<&u32> = self
-                .get_neighbors(i)
+                .neighbors_in(&i)
                 .iter()
                 .filter_map(|n| colors.get(n))
                 .collect();

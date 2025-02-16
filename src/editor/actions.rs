@@ -1,6 +1,8 @@
 use eframe::egui::vec2;
 use ulid::Ulid;
 
+use crate::graphs::Graph;
+
 use super::GraphDisplayer;
 
 pub fn copy_nodes(display: &mut GraphDisplayer) {
@@ -64,7 +66,7 @@ pub fn paste_nodes(display: &mut GraphDisplayer) {
 
 pub fn delete_nodes(display: &mut GraphDisplayer) {
     for id in display.selected_nodes.drain() {
-        display.graphs[display.selected_graph].remove(id);
+        display.graphs[display.selected_graph].remove(&id);
     }
     display.context_menu.visible = false;
 }

@@ -2,18 +2,18 @@ use eframe::{NativeOptions, egui::Color32};
 use rand::{rng, seq::SliceRandom};
 
 use editor::GraphDisplayer;
-use graph::{Graph, Node};
+use graphs::{Graph, Node, OrientedGraph};
 use ulid::Ulid;
 
 mod editor;
-pub(crate) mod graph;
+pub(crate) mod graphs;
 pub mod ui;
 
 fn main() {
     // unsafe { env::set_var("RUST_BACKTRACE", "full") };
     println!("Hello, world!");
 
-    let mut graph = Graph::empty();
+    let mut graph = OrientedGraph::<f32>::empty();
 
     let mut prev_id: Ulid = Ulid(0);
 
@@ -24,7 +24,7 @@ fn main() {
             Color32::GRAY,
         ));
         if i > 0 {
-            graph.link(prev_id, cur_id, true);
+            graph.link(&prev_id, &cur_id, 0.0);
         }
         prev_id = cur_id;
     }

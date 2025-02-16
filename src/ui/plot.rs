@@ -5,7 +5,7 @@ use eframe::{
 
 use crate::{
     editor::{GraphDisplayer, GraphTools},
-    graph::POINT_RADIUS,
+    graphs::POINT_RADIUS,
 };
 
 use super::context_menu::ContextMenu;
@@ -48,8 +48,17 @@ pub fn plot_graph(ctx: &Context, inputs: &InputState, displayer: &mut GraphDispl
 
                         match displayer.tool {
                             GraphTools::Nodes => {
-                                node.pos += point_response.drag_delta();
+                                // Apply movement to all selected nodes, or only this one if it isn't selected
+                                if displayer.selected_nodes.contains(id) {
+                                    for id in displayer.selected_nodes.iter() {}
+                                } else {
+                                    node.pos += point_response.drag_delta();
+                                }
 
+                                // Registers & applies clicks & drags :
+                                // - Ctrl click/drag : Add nodes to the selection
+                                // - Shift drag : Toggle nodes in selection, instead of selecting them
+                                // - Shift click : (TODO) select all nodes in the shortest chain including all already selected nodes
                                 if point_response.clicked() {
                                     let already_selected = displayer.selected_nodes.contains(id);
                                     let len = displayer.selected_nodes.len();
@@ -65,11 +74,10 @@ pub fn plot_graph(ctx: &Context, inputs: &InputState, displayer: &mut GraphDispl
                                             displayer.selected_nodes.insert(*id);
                                         }
                                     }
-                                } else if point_response.hovered() {
-                                    color = color + ui.style().interact(&point_response).bg_fill;
-                                }
-
-                                if displayer.selected_nodes.contains(id) {
+                                } else if point_response.hovered()
+                                    || displayer.selected_nodes.contains(id)
+                                {
+                                    // Highlight the node
                                     color = color + ui.style().interact(&point_response).bg_fill;
                                 }
                             }
@@ -86,6 +94,7 @@ pub fn plot_graph(ctx: &Context, inputs: &InputState, displayer: &mut GraphDispl
 
             let to_screen = emath::RectTransform::from_to(bg_response.rect, reference_rect);
 
+            // If right-click : open context menu
             if bg_response.secondary_clicked() {
                 displayer.context_menu = ContextMenu {
                     just_opened: true,
@@ -141,7 +150,7 @@ pub fn plot_graph(ctx: &Context, inputs: &InputState, displayer: &mut GraphDispl
             let lines: Vec<Shape> = displayer.graphs[displayer.selected_graph]
                 .edges
                 .iter()
-                .map(|e| {
+                .map(|(e, _)| {
                     Shape::line_segment(
                         [
                             displayer.graphs[displayer.selected_graph]
@@ -155,7 +164,16 @@ pub fn plot_graph(ctx: &Context, inputs: &InputState, displayer: &mut GraphDispl
                                 .unwrap()
                                 .pos,
                         ],
-                        Stroke::new(1.0, Color32::GREEN),
+                        Stroke::new(
+                            1.0,
+                            if displayer.selected_nodes.contains(&e.0)
+                                || displayer.selected_nodes.contains(&e.1)
+                            {
+                                Color32::GREEN
+                            } else {
+                                Color32::GRAY
+                            },
+                        ),
                     )
                 })
                 .collect();

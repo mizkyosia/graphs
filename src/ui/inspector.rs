@@ -1,9 +1,9 @@
-use eframe::egui::{self, Context, DragValue, RichText};
+use eframe::egui::{self, Context, DragValue};
 use egui_extras::{Column, TableBuilder};
 use rand::{rng, seq::SliceRandom};
 use ulid::Ulid;
 
-use crate::GraphDisplayer;
+use crate::{graphs::Graph, GraphDisplayer};
 
 pub struct GraphInspector {
     pub message: String,
@@ -14,7 +14,7 @@ pub fn show_graph_inspector(ctx: &Context, displayer: &mut GraphDisplayer) {
         ui.heading("Graph editor");
         ui.label(format!(
             "Graph size : {}",
-            displayer.graphs[displayer.selected_graph].size()
+            displayer.graphs[displayer.selected_graph].node_count()
         ));
 
         // Lists all the current graph's nodes
@@ -36,7 +36,7 @@ pub fn show_graph_inspector(ctx: &Context, displayer: &mut GraphDisplayer) {
                     });
                 })
                 .body(|body| {
-                    let size = displayer.graphs[displayer.selected_graph].size();
+                    let size = displayer.graphs[displayer.selected_graph].node_count();
                     let mut nodes = displayer.graphs[displayer.selected_graph].nodes.iter_mut();
 
                     body.rows(20.0, size, |mut rows| {
@@ -64,8 +64,6 @@ pub fn show_graph_inspector(ctx: &Context, displayer: &mut GraphDisplayer) {
                     });
                 });
         });
-
-        ui.label(RichText::new(format!("{:?}", displayer.context_menu)).monospace());
 
         if ui.button("Color graph").clicked() {
             let mut order: Vec<Ulid> = displayer.graphs[displayer.selected_graph]

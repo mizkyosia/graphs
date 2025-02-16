@@ -2,7 +2,7 @@ use eframe::egui::{self, Context};
 
 use crate::{
     editor::{GraphDisplayer, GraphTools},
-    graph::Graph,
+    graphs::{Graph, OrientedGraph},
 };
 
 pub fn show_graph_tools(ctx: &Context, tool: &mut GraphTools) {
@@ -33,7 +33,7 @@ pub fn show_graph_selector(ctx: &Context, displayer: &mut GraphDisplayer) {
 
             // Add a new empty graph to the list
             if ui.button("+").clicked() {
-                displayer.graphs.push(Graph::empty());
+                displayer.graphs.push(OrientedGraph::empty());
             }
         });
     });

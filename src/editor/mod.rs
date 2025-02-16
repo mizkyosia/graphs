@@ -8,7 +8,7 @@ use inputs::graph_keyboard_inputs;
 use ulid::Ulid;
 
 use crate::{
-    graph::Graph,
+    graphs::{Graph, OrientedGraph},
     ui::{self, context_menu::*, inspector::GraphInspector},
 };
 
@@ -21,10 +21,10 @@ pub enum GraphTools {
 }
 
 pub struct GraphDisplayer {
-    pub graphs: Vec<Graph>,
+    pub graphs: Vec<OrientedGraph<f32>>,
     pub selected_graph: usize,
     pub selected_nodes: HashSet<Ulid>,
-    pub temporary: Graph,
+    pub temporary: OrientedGraph<f32>,
     pub rect: egui::Rect,
     pub tool: GraphTools,
     pub selection_rect: Rect,
@@ -35,11 +35,11 @@ pub struct GraphDisplayer {
 impl Default for GraphDisplayer {
     fn default() -> Self {
         Self {
-            graphs: vec![Graph::empty()],
+            graphs: vec![OrientedGraph::empty()],
             selected_graph: 0,
             rect: Rect::from_center_size(pos2(0.0, 0.0), vec2(1000.0, 1000.0)),
             selected_nodes: HashSet::new(),
-            temporary: Graph::empty(),
+            temporary: OrientedGraph::empty(),
             tool: GraphTools::Look,
             selection_rect: Rect::ZERO,
             context_menu: ContextMenu {
