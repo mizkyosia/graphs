@@ -1,11 +1,14 @@
+use std::i32;
+
 use eframe::{
     egui::{self, Color32, Context, InputState, Rect, Sense, Shape, Stroke, Vec2},
     emath,
 };
+use ulid::Ulid;
 
 use crate::{
     editor::{GraphDisplayer, GraphTools},
-    graphs::POINT_RADIUS,
+    graphs::{Graph, POINT_RADIUS},
 };
 
 use super::context_menu::ContextMenu;
@@ -27,8 +30,10 @@ pub fn plot_graph(ctx: &Context, inputs: &InputState, displayer: &mut GraphDispl
                 },
             );
 
+            let mut pathfind_target: Option<Ulid> = None;
             let mut dragged_node = false;
             let mut clicked_node = false;
+            let mut node_delta = Vec2::ZERO;
 
             let nodes: Vec<Shape> = displayer.graphs[displayer.selected_graph]
                 .nodes
@@ -49,20 +54,28 @@ pub fn plot_graph(ctx: &Context, inputs: &InputState, displayer: &mut GraphDispl
                         match displayer.tool {
                             GraphTools::Nodes => {
                                 // Apply movement to all selected nodes, or only this one if it isn't selected
-                                if displayer.selected_nodes.contains(id) {
-                                    for id in displayer.selected_nodes.iter() {}
-                                } else {
-                                    node.pos += point_response.drag_delta();
+                                if point_response.dragged() {
+                                    if displayer.selected_nodes.contains(id) {
+                                        node_delta = point_response.drag_delta();
+                                    } else {
+                                        node.pos += point_response.drag_delta();
+                                    }
                                 }
 
                                 // Registers & applies clicks & drags :
                                 // - Ctrl click/drag : Add nodes to the selection
                                 // - Shift drag : Toggle nodes in selection, instead of selecting them
-                                // - Shift click : (TODO) select all nodes in the shortest chain including all already selected nodes
+                                // - Shift click : select all nodes in the shortest chain from one of the previously
+                                //   selected nodes, to the clicked node
                                 if point_response.clicked() {
                                     let already_selected = displayer.selected_nodes.contains(id);
                                     let len = displayer.selected_nodes.len();
-                                    if inputs.modifiers.command {
+
+                                    if inputs.modifiers.shift {
+                                        pathfind_target = Some(*id);
+                                    }
+                                    // If ctrl
+                                    else if inputs.modifiers.command {
                                         if already_selected {
                                             displayer.selected_nodes.remove(id);
                                         } else {
@@ -91,6 +104,43 @@ pub fn plot_graph(ctx: &Context, inputs: &InputState, displayer: &mut GraphDispl
                     Shape::circle_filled(node.pos, POINT_RADIUS, color)
                 })
                 .collect();
+
+            // Actually do the pathfinding
+            if let Some(target) = pathfind_target {
+                let mut min_cost = i32::MAX;
+                let mut min_path = Vec::new();
+                let mut min_node = Ulid(0);
+
+                // Find node closest to the target node
+                for n in displayer.selected_nodes.iter() {
+                    if let Some((path, cost)) =
+                        displayer.graphs[displayer.selected_graph].dijkstra(n, &target)
+                    {
+                        if cost < min_cost {
+                            min_cost = cost;
+                            min_path = path;
+                            min_node = *n;
+                        }
+                    }
+                }
+
+                // If we don't press ctrl, remove all other nodes
+                if !inputs.modifiers.command {
+                    displayer.selected_nodes.retain(|e| *e == min_node);
+                }
+
+                // Add path nodes to the selected collection
+                displayer.selected_nodes.extend(min_path);
+            }
+
+            // Apply drag movement to selected nodes
+            for id in displayer.selected_nodes.iter() {
+                displayer.graphs[displayer.selected_graph]
+                    .nodes
+                    .get_mut(id)
+                    .unwrap()
+                    .pos += node_delta
+            }
 
             let to_screen = emath::RectTransform::from_to(bg_response.rect, reference_rect);
 

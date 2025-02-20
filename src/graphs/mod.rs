@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Debug, ops::Add};
 
 use eframe::egui::Rect;
 use ulid::Ulid;
@@ -10,19 +10,29 @@ pub use oriented::*;
 
 pub const POINT_RADIUS: f32 = 8.0;
 
-pub enum GraphType<W = f32>
+pub enum GraphType<W = i32>
 where
-    W: PartialOrd + PartialEq,
+    W: GraphWeight,
 {
     Oriented(OrientedGraph<W>),
 }
 
-#[allow(dead_code)]
-pub trait Graph<E, W = f32>
-where
-    W: PartialOrd + PartialEq,
+// Horrendous implementation because FUCK BOILERPLATES
+pub trait GraphWeight:
+    Ord + PartialOrd + PartialEq + Default + Clone + Add<Output = Self> + Debug
 {
-    fn new(nodes: HashMap<Ulid, Node>, edges: HashMap<E, W>) -> Self;
+}
+impl<T: Ord + PartialOrd + PartialEq + Default + Clone + Add<Output = Self> + Debug> GraphWeight
+    for T
+{
+}
+
+#[allow(dead_code)]
+pub trait Graph<W = i32>
+where
+    W: GraphWeight,
+{
+    fn new(nodes: HashMap<Ulid, Node>, edges: HashMap<(Ulid, Ulid), W>) -> Self;
     fn empty() -> Self;
 
     fn node_count(&self) -> usize;
@@ -31,15 +41,19 @@ where
 
     fn clear(&mut self);
     fn insert(&mut self, node: Node) -> Ulid;
-    fn insert_with_edges(&mut self, node: Node, edges: impl IntoIterator<Item = (E, W)>) -> Ulid;
+    fn insert_with_edges(
+        &mut self,
+        node: Node,
+        edges: impl IntoIterator<Item = ((Ulid, Ulid), W)>,
+    ) -> Ulid;
     fn remove(&mut self, node: &Ulid) -> Option<Node>;
 
     fn link(&mut self, node1: &Ulid, node2: &Ulid, weight: W);
-    fn neighbors_in(&self, node: &Ulid) -> Vec<Ulid>;
-    fn neighbors_out(&self, node: &Ulid) -> Vec<Ulid>;
+    fn neighbors_in(&self, node: &Ulid) -> Vec<(Ulid, W)>;
+    fn neighbors_out(&self, node: &Ulid) -> Vec<(Ulid, W)>;
 
     /// Checks if a link Node1 -> Node2 exists
     fn linked(&self, node1: &Ulid, node2: &Ulid) -> bool;
-    /// Tries to find a path from `start` to `end`, with the smallest weight possible
-    fn djikstra(&self, start: &Ulid, end: &Ulid) -> Option<Vec<Ulid>>;
+    /// Tries to find a path from `start` to `end`, with the smallest weight possible. Returns the path, along with its total weight
+    fn dijkstra(&self, start: &Ulid, end: &Ulid) -> Option<(Vec<Ulid>, W)>;
 }

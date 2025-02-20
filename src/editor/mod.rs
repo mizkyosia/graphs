@@ -21,10 +21,10 @@ pub enum GraphTools {
 }
 
 pub struct GraphDisplayer {
-    pub graphs: Vec<OrientedGraph<f32>>,
+    pub graphs: Vec<OrientedGraph>,
     pub selected_graph: usize,
     pub selected_nodes: HashSet<Ulid>,
-    pub temporary: OrientedGraph<f32>,
+    pub temporary: OrientedGraph,
     pub rect: egui::Rect,
     pub tool: GraphTools,
     pub selection_rect: Rect,
