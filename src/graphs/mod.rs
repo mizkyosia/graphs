@@ -17,7 +17,7 @@ where
     Oriented(OrientedGraph<W>),
 }
 
-// Horrendous implementation because FUCK BOILERPLATES
+// Horrendous trait alias implementation because FUCK BOILERPLATES
 pub trait GraphWeight:
     Ord + PartialOrd + PartialEq + Default + Clone + Add<Output = Self> + Debug
 {

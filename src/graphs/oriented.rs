@@ -6,6 +6,7 @@ use ulid::Ulid;
 
 use super::{Graph, GraphWeight, Node, POINT_RADIUS};
 
+#[derive(Debug)]
 pub struct OrientedGraph<W = i32>
 where
     W: GraphWeight,
