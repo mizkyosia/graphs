@@ -1,4 +1,4 @@
-use eframe::egui::{Color32, Pos2, pos2};
+use eframe::egui::{Color32, Pos2};
 
 #[derive(Debug, Default, Clone)]
 pub struct Node {
@@ -8,11 +8,19 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn new(x: f32, y: f32, color: Color32) -> Self {
+    pub fn new(pos: Pos2, color: Color32, name: impl Into<String>) -> Self {
         Self {
             color,
-            pos: pos2(x, y),
-            name: "Vertex :3".into(),
+            pos,
+            name: name.into(),
+        }
+    }
+
+    pub fn at_pos(pos: Pos2) -> Self {
+        Self {
+            name: "Nowode :3".into(),
+            color: Color32::GRAY,
+            pos,
         }
     }
 }

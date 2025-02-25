@@ -1,5 +1,7 @@
-use eframe::{NativeOptions, egui::Color32};
-use rand::{rng, seq::SliceRandom};
+use eframe::{
+    NativeOptions,
+    egui::{Color32, pos2},
+};
 
 use editor::GraphDisplayer;
 
@@ -12,26 +14,19 @@ pub mod ui;
 
 fn main() {
     // unsafe { env::set_var("RUST_BACKTRACE", "full") };
-    println!("Hello, world!");
+    println!("Hewwooooo :3");
 
     let mut graph = OrientedGraph::empty();
 
     let mut prev_id: Ulid = Ulid(0);
 
     for i in 0..4 {
-        let cur_id = graph.insert(Node::new(
-            i as f32 * 50.0 - 100.0,
-            50.0 * i as f32,
-            Color32::GRAY,
-        ));
+        let cur_id = graph.insert(Node::at_pos(pos2(i as f32 * 50.0 - 100.0, 50.0 * i as f32)));
         if i > 0 {
             graph.link(&prev_id, &cur_id, 0);
         }
         prev_id = cur_id;
     }
-
-    let mut vec: Vec<Ulid> = graph.nodes.keys().copied().collect();
-    vec.shuffle(&mut rng());
 
     let _res = eframe::run_native(
         "Graphs :3",

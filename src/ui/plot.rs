@@ -8,7 +8,7 @@ use ulid::Ulid;
 
 use crate::{
     editor::{GraphDisplayer, GraphTools},
-    graphs::{Graph, POINT_RADIUS},
+    graphs::{Graph, Node, POINT_RADIUS},
 };
 
 use super::context_menu::ContextMenu;
@@ -29,6 +29,13 @@ pub fn plot_graph(ctx: &Context, inputs: &InputState, displayer: &mut GraphDispl
                     Sense::click()
                 },
             );
+
+            if let Some(pos) = bg_response.hover_pos() {
+                displayer.last_hovered_position = pos;
+                if inputs.key_pressed(egui::Key::N) {
+                    displayer.graphs[displayer.selected_graph].insert(Node::at_pos(pos));
+                }
+            }
 
             let mut pathfind_target: Option<Ulid> = None;
             let mut dragged_node = false;

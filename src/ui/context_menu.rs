@@ -3,7 +3,10 @@ use eframe::egui::{self, Align2, Context, Layout, Pos2};
 use crate::{
     GraphDisplayer,
     editor::{GraphTools, actions::*},
+    graphs::{Graph, Node},
 };
+
+use super::widgets::action_label::ActionLabel;
 
 #[derive(Debug)]
 pub struct ContextMenu {
@@ -35,24 +38,49 @@ pub fn show_context_menu(display: &mut GraphDisplayer, context: &Context) {
                             ui.label("WIP...");
                         }
                         GraphTools::Nodes => {
-                            ui.heading("Graph edit");
+                            let multi_enabled = !display.selected_nodes.is_empty();
+
+                            ui.label("Nodes");
                             ui.indent("node_actions", |ui| {
-                                if ui.selectable_label(false, "📄 Copy").clicked() {
-                                    copy_nodes(display);
-                                }
-                                if ui.selectable_label(false, "✂ Cut").clicked() {
-                                    cut_nodes(display);
-                                }
-                                if ui.selectable_label(false, "📋 Paste").clicked() {
-                                    paste_nodes(display);
+                                if ui.add(ActionLabel::new("➕ Add", "N")).clicked() {
+                                    display.graphs[display.selected_graph]
+                                        .insert(Node::at_pos(display.last_hovered_position));
+                                    display.context_menu.visible = false;
                                 }
                             });
 
-                            if !display.selected_nodes.is_empty()
-                                && ui.selectable_label(false, "🗑Delete").clicked()
-                            {
-                                delete_nodes(display);
-                            }
+                            ui.separator();
+
+                            ui.label("Selection");
+                            ui.indent("selection_action", |ui| {
+                                if ui
+                                    .add_enabled(
+                                        multi_enabled,
+                                        ActionLabel::new("📄 Copy", "Ctrl + C"),
+                                    )
+                                    .clicked()
+                                {
+                                    copy_nodes(display);
+                                }
+                                if ui
+                                    .add_enabled(
+                                        multi_enabled,
+                                        ActionLabel::new("✂ Cut", "Ctrl + X"),
+                                    )
+                                    .clicked()
+                                {
+                                    cut_nodes(display);
+                                }
+                                if ui.add(ActionLabel::new("📋 Paste", "Ctrl + V")).clicked() {
+                                    paste_nodes(display);
+                                }
+                                if ui
+                                    .add_enabled(multi_enabled, ActionLabel::new("🗑Delete", "Del"))
+                                    .clicked()
+                                {
+                                    delete_nodes(display);
+                                }
+                            });
                         }
                         _ => {}
                     },

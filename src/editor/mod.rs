@@ -3,7 +3,7 @@ pub mod inputs;
 
 use std::collections::HashSet;
 
-use eframe::egui::{self, Context, Rect, Visuals, pos2, vec2};
+use eframe::egui::{self, Context, Pos2, Rect, Visuals, pos2, vec2};
 use inputs::graph_keyboard_inputs;
 use ulid::Ulid;
 
@@ -30,6 +30,7 @@ pub struct GraphDisplayer {
     pub selection_rect: Rect,
     pub context_menu: ContextMenu,
     pub inspector: GraphInspector,
+    pub last_hovered_position: Pos2,
 }
 
 impl Default for GraphDisplayer {
@@ -50,6 +51,7 @@ impl Default for GraphDisplayer {
             inspector: GraphInspector {
                 message: ":3".into(),
             },
+            last_hovered_position: Pos2::default(),
         }
     }
 }
