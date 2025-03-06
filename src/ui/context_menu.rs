@@ -49,6 +49,14 @@ pub fn show_context_menu(display: &mut GraphDisplayer, context: &Context) {
                                 }
                             });
 
+                            ui.label("Links");
+                            if ui.add(ActionLabel::new("Link", "L")).clicked() {
+                                link_nodes(display, false, false);
+                            }
+                            if ui.add(ActionLabel::new("Link all selected", "L")).clicked() {
+                                link_nodes(display, true, false);
+                            }
+
                             ui.separator();
 
                             ui.label("Selection");

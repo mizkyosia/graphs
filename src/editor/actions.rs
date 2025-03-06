@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use eframe::egui::vec2;
+use eframe::egui::{Pos2, vec2};
 use ulid::Ulid;
 
 use crate::graphs::Graph;
@@ -105,4 +105,39 @@ pub fn delete_nodes(display: &mut GraphDisplayer) {
         display.graphs[display.selected_graph].remove(&id);
     }
     display.context_menu.visible = false;
+}
+
+pub fn link_nodes(display: &mut GraphDisplayer, all: bool, double: bool) {
+    if all {
+        for n1 in display.selected_nodes.iter().by_ref() {
+            for n2 in display.selected_nodes.iter() {
+                display.graphs[display.selected_graph].link(n1, n2, Default::default());
+                if double {
+                    display.graphs[display.selected_graph].link(n2, n1, Default::default());
+                }
+            }
+        }
+    } else {
+        for n in display.selected_nodes.iter() {
+            let pos = display.graphs[display.selected_graph]
+                .nodes
+                .get(n)
+                .unwrap()
+                .pos;
+            let mut closest = Pos2::new(f32::INFINITY, f32::INFINITY);
+            let mut target = Ulid(0);
+            // Find closest node
+            for (id, data) in display.graphs[display.selected_graph].nodes.iter() {
+                if *n != *id && data.pos.distance_sq(pos) < closest.distance_sq(pos) {
+                    closest = data.pos;
+                    target = *id;
+                }
+            }
+            // Link both nodes
+            display.graphs[display.selected_graph].link(n, &target, Default::default());
+            if double {
+                display.graphs[display.selected_graph].link(&target, n, Default::default());
+            }
+        }
+    }
 }

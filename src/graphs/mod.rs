@@ -10,13 +10,6 @@ pub use oriented::*;
 
 pub const POINT_RADIUS: f32 = 8.0;
 
-pub enum GraphType<W = i32>
-where
-    W: GraphWeight,
-{
-    Oriented(OrientedGraph<W>),
-}
-
 // Horrendous trait alias implementation because FUCK BOILERPLATES
 pub trait GraphWeight:
     Ord + PartialOrd + PartialEq + Default + Clone + Add<Output = Self> + Debug
@@ -25,6 +18,21 @@ pub trait GraphWeight:
 impl<T: Ord + PartialOrd + PartialEq + Default + Clone + Add<Output = Self> + Debug> GraphWeight
     for T
 {
+}
+
+pub struct EdgeData {
+    cost: f32,
+    capacity: i32,
+}
+
+pub enum GraphEdge {
+    Simple(EdgeData),
+    Multiple(Vec<EdgeData>),
+}
+
+pub enum GraphType {
+    Oriented(OrientedGraph),
+    MultiOriented,
 }
 
 #[allow(dead_code)]

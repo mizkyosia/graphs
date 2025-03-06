@@ -24,6 +24,7 @@ pub fn graph_keyboard_inputs(display: &mut GraphDisplayer, inputs: &InputState) 
                             .collect();
                     }
                 }
+                Key::L => link_nodes(display, inputs.modifiers.command, inputs.modifiers.shift),
                 Key::Delete | Key::Backspace => delete_nodes(display),
                 _ => {}
             },

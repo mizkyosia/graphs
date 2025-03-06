@@ -1,7 +1,4 @@
-use eframe::{
-    NativeOptions,
-    egui::{Color32, pos2},
-};
+use eframe::{NativeOptions, egui::pos2};
 
 use editor::GraphDisplayer;
 
